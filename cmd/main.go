@@ -25,6 +25,6 @@ func main() {
 	log.Println("received OS interrupting signal")
 	srv.Stop()
 
-	router.Post("./internal/html/home.tmpl", http.HandlerFunc(&home))
+	router.Post("./internal/html/home.tmpl", http.HandlerFunc(home))
 	srv.ListenAndServe()
 }
