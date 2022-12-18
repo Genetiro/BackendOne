@@ -1,4 +1,4 @@
-module project
+module github.com/Genetiro/BackendOne
 
 go 1.17
 
