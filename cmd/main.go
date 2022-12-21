@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Genetiro/BackendOne/tree/project/internal/server"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -14,7 +15,9 @@ import (
 func main() {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
-	srv := server.New(":8080", home)
+	handler := router.HandleFunc("/", (Home))
+
+	srv := server.New(":8080", handler)
 
 	srv.Start()
 
@@ -24,7 +27,6 @@ func main() {
 	<-osSigChan
 	log.Println("received OS interrupting signal")
 	srv.Stop()
-
-	router.Post("./internal/html/home.tmpl", http.HandlerFunc(home))
+	router.Post("./internal/html/home.tmpl", http.HandlerFunc(Home))
 	srv.ListenAndServe()
 }
