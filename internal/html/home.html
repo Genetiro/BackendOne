@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiny Link</title>
+</head>
+
+<body>
+    <br>
+    <form method="post" name="mainform" id="mainform" action="create.php" onsubmit="return submitForm()">
+        <div id="errortext"></div>
+        <div id="urlboxcontainer"><input type="text" class="urlbox" maxlength="5000" size="55" name="url" value=""></div>
+        <br />
+        <div id="shorturlboxcontainer" style="display: none;">
+            https://is.gd/<input type="text" class="shorturlbox" maxlength="30" size="30" name="shorturl" value="" onchange="shortURLChanged()" onkeyup="shortURLChanged()" onmouseout="shortURLChanged()"></div>
+
+        <div id="statsopt" style="display: none;"><input type="checkbox" name="logstats" id="logstats" value="1"><label for="logstats">Log statistics for this link</label></div>
+        <input type="submit" class="submitbutton" value="Shorten!">
+    </form>
+</body>
+
+</html>
