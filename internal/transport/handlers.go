@@ -1,56 +1,98 @@
 package transport
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
 	"text/template"
+
+	"github.com/go-chi/chi"
 )
 
+type ListDb struct {
+	Id    int
+	link  string
+	short string
+}
+
+var database *sql.DB
+
+type LinkResources struct{}
 type Result struct {
 	Link   string
 	Code   string
 	Status string
 }
 
-func Home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
+func (rs LinkResources) Routes() chi.Router {
+	r := chi.NewRouter()
+	r.Get("/", rs.List)    //GET /links
+	r.Post("/", rs.Create) //POST /links
+	r.Route("/{short}", func(r chi.Router) {
+		r.Use(PostCtx)
+		r.Get("/", rs.Get)        // GET /links/{short}
+		rs.Delete("/", rs.Delete) // DELETE /links/{short}
 
-	path := filepath.Join("internal", "html", "home.html")
-	ts, err := template.ParseFiles(path)
+	})
+	return r
+}
+func (rs LinkResources) List(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("sqlite3", "links.db")
 	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
-		return
+		log.Println(err)
 	}
-	err = ts.Execute(w, nil)
+	database = db
+	defer db.Close()
+	rows, err := database.Query("SELECT * FROM links.linkshort")
 	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
+		log.Println(err)
 	}
-
-	result := Result{}
-	if r.Method == "POST" {
-		if !isValidUrl(r.FormValue("s")) {
-			fmt.Println("Что-то не так")
-			result.Status = "Bad format"
-			result.Link = ""
-		} else {
-			result.Link = r.FormValue("s")
-			result.Code = shorting()
-			db, err := sql.Open("sqlite3", "links.db")
-			if err != nil {
-				panic(err)
-			}
-			defer db.Close()
-			db.Exec("insert into linkshort (link, short) values ($1, $2)", result.Link, result.Code)
-			result.Status = "Successfully shorting link"
+	defer rows.Close()
+	ListLinks := []ListDb{}
+	for rows.Next() {
+		l := ListDb{}
+		err := rows.Scan(&l.Id, &l.link, &l.short)
+		if err != nil {
+			fmt.Println(err)
+			continue
 		}
+		ListLinks = append(ListLinks, l)
 	}
-	ts.Execute(w, result)
+	tmpl, _ := template.ParseFiles("html/list.html")
+	tmpl.Execute(w, ListLinks)
+}
+func (rs LinkResources) Create(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ := template.ParseFiles("html/home.html")
+	result := Result{}
+	if !isValidUrl(r.FormValue("s")) {
+		fmt.Println("Something wrong")
+		result.Status = "Bad format"
+		result.Link = ""
+	} else {
+		result.Link = r.FormValue("s")
+		result.Code = shorting()
+		db, err := sql.Open("sqlite3", "links.linkshort")
+		if err != nil {
+			panic(err)
+		}
+		defer db.Close()
+		db.Exec("insert into linkshort (link, short) values ($1, $2)", result.Link, result.Code)
+		result.Status = "Successfully shorting link"
+	}
+
+	tmpl.Execute(w, result)
+}
+func PostCtx(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), "short", chi.URLParam(r, "short"))
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+func (rs LinkResources) Get(w http.ResponseWriter, r *http.Request) {
+
+}
+func (rs LinkResources) Delete(w http.ResponseWriter, r *http.Request) {
+
 }

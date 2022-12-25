@@ -1,4 +1,4 @@
-package transport
+package main
 
 import (
 	"context"
@@ -11,7 +11,8 @@ type Server struct {
 	srv http.Server
 }
 
-func New(addr string, h http.Handler) *Server {
+//
+func NewSrv(addr string, h http.Handler) *Server {
 	s := &Server{}
 
 	s.srv = http.Server{
