@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  myservice:
+    container_name: shortner
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - myservice-net
+  sqlite3:
+    container_name: sqlite3_container
+    image: nouchka/sqlite3:latest
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./database/links.db:/root/db/
+    networks:
+      - myservice-net
+    restart: always
+networks:
+  myservice-net:
+    driver: bridge
