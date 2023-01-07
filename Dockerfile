@@ -1,9 +1,9 @@
-FROM golang:1.15 as modules
+FROM golang:1.19 as modules
 
 ADD go.mod go.sum . /
 RUN go mod download
 
-FROM golang:1.15 as builder
+FROM golang:1.19 as builder
 
 COPY --from=modules /go/pkg /go/pkg
 
