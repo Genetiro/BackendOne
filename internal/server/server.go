@@ -31,7 +31,7 @@ func (s *Server) Start() {
 
 func (s *Server) Stop() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 	s.srv.Shutdown(ctx)
 	log.Println("server turned off")
-	cancel()
 }

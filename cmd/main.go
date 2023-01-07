@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "github.com/Genetiro/BackendOne/docs"
+	"github.com/Genetiro/BackendOne/internal/database"
 	"github.com/Genetiro/BackendOne/internal/server"
 	"github.com/Genetiro/BackendOne/internal/transport"
 	"github.com/go-chi/chi/middleware"
@@ -28,13 +30,20 @@ func main() {
 
 	srv.Start()
 
+	database.DbCon()
+
 	r.Use(middleware.Logger)
+	// @Summary Welcome
+	// @Description start
+	// @Success     200 {string}   string "welcome"
+	// @Failure		400	{string}	string	"ok"
+	// @Failure		404	{string}	string	"ok"
+	// @Failure		500	{string}	string	"ok"
+	// @Router /links [get]
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Welcome")
 	})
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8080/swagger/doc.json"), //The url pointing to API definition
-	))
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	r.Mount("/links", transport.LinkResources{}.Routes())
 	osSigChan := make(chan os.Signal, 1)

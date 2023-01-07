@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"text/template"
 
+	"github.com/Genetiro/BackendOne/internal/shortner"
 	"github.com/go-chi/chi"
 )
 
@@ -17,7 +18,7 @@ type ListDb struct {
 	short string
 }
 
-var database *sql.DB
+var dbase *sql.DB
 
 type LinkResources struct{}
 
@@ -42,17 +43,14 @@ func (rs LinkResources) Routes() chi.Router {
 
 // @Summary List
 // @Description get table of links
-// @Param input body ListLinks true "links table"
+// @Success     200 {array}   []ListDb{} "list"
+// @Failure		400	{string}	string	"ok"
+// @Failure		404	{string}	string	"ok"
+// @Failure		500	{string}	string	"ok"
 // @Router /links [get]
-
 func (rs LinkResources) List(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", "links.db")
-	if err != nil {
-		log.Println("can not open db ", err)
-	}
-	database := db
-	defer db.Close()
-	rows, err := database.Query("SELECT * FROM links.linkshort")
+
+	rows, err := dbase.Query("SELECT * FROM links.linkshort")
 	if err != nil {
 		log.Println(err)
 	}
@@ -73,25 +71,24 @@ func (rs LinkResources) List(w http.ResponseWriter, r *http.Request) {
 
 // @Summary Create
 // @Description create new short links
-// @Param  input body result true "new short link"
+// @Param  result.Link string string true "new link"
+// @Success     200 {struct}    Result{} "list"
+// @Failure		400	{string}	string	"ok"
+// @Failure		404	{string}	string	"ok"
+// @Failure		500	{string}	string	"ok"
 // @Router /links [post]
-
 func (rs LinkResources) Create(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("html/home.html")
 	result := Result{}
-	if !isValidUrl(r.FormValue("s")) {
+	if !shortner.IsValidUrl(r.FormValue("s")) {
 		fmt.Println("No valid url")
 		result.Status = "Bad format"
 		result.Link = ""
 	} else {
 		result.Link = r.FormValue("s")
-		result.Code = shorting()
-		db, err := sql.Open("sqlite3", "links.linkshort")
-		if err != nil {
-			panic(err)
-		}
-		defer db.Close()
-		db.Exec("insert into linkshort (link, short) values ($1, $2)", result.Link, result.Code)
+		result.Code = shortner.Shorting()
+
+		dbase.Exec("insert into linkshort (link, short) values ($1, $2)", result.Link, result.Code)
 		result.Status = "Successfully shorting link"
 	}
 
@@ -106,18 +103,16 @@ func PostCtx(next http.Handler) http.Handler {
 
 // @Summary Get
 // @Description get link filtered by short
-// @Param  input body l true "link table"
+// @Param short path string true "get link"
+// @Success     200 {array}   []ListDb{}  "link"
+// @Failure		400	{string}	string	"ok"
+// @Failure		404	{string}	string	"ok"
+// @Failure		500	{string}	string	"ok"
 // @Router /links/{short} [get]
-
 func (rs LinkResources) Get(w http.ResponseWriter, r *http.Request) {
 	shrt := r.Context().Value("short").(string)
-	db, err := sql.Open("sqlite3", "links.db")
-	if err != nil {
-		log.Println("can not open db(by short) ", err)
-	}
-	database := db
-	defer db.Close()
-	row := database.QueryRow("SELECT id, link, short FROM links.linkshort WHERE short = $1", shrt)
+
+	row := dbase.QueryRow("SELECT id, link, short FROM links.linkshort WHERE short = $1", shrt)
 
 	l := ListDb{}
 	errr := row.Scan(&l.Id, &l.link, &l.short)
@@ -137,18 +132,16 @@ func (rs LinkResources) Get(w http.ResponseWriter, r *http.Request) {
 
 // @Summary Delete
 // @Description delete line from table filtered by short
-// @Param  input body ListLink true
+// @Param short path string true "delete link"
 // @Success 301 {integer} integer 1
+// @Failure		400	{string}	string	"ok"
+// @Failure		404	{string}	string	"ok"
+// @Failure		500	{string}	string	"ok"
 // @Router /links/{short} [delete]
 func (rs LinkResources) Delete(w http.ResponseWriter, r *http.Request) {
 	shrt := r.Context().Value("short").(string)
-	db, err := sql.Open("sqlite3", "links.db")
-	if err != nil {
-		log.Println("can not open db(for delete) ", err)
-	}
-	database := db
-	defer db.Close()
-	_, errr := database.Exec("DELETe FROM links.linkshort WHERE short = $1", shrt)
+
+	_, errr := dbase.Exec("DELETe FROM links.linkshort WHERE short = $1", shrt)
 	if errr != nil {
 		log.Println(errr)
 	}
