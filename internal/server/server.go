@@ -26,6 +26,7 @@ func NewSrv(addr string, h http.Handler) *Server {
 
 func (s *Server) Start() {
 	go s.srv.ListenAndServe()
+
 	log.Println("server started on", s.srv.Addr)
 }
 

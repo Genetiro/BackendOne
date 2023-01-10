@@ -9,7 +9,6 @@ import (
 	"syscall"
 
 	_ "github.com/Genetiro/BackendOne/docs"
-	"github.com/Genetiro/BackendOne/internal/database"
 	"github.com/Genetiro/BackendOne/internal/server"
 	"github.com/Genetiro/BackendOne/internal/transport"
 	"github.com/go-chi/chi/middleware"
@@ -29,8 +28,6 @@ func main() {
 	srv := server.NewSrv(":8080", r)
 
 	srv.Start()
-
-	database.DbCon()
 
 	r.Use(middleware.Logger)
 	// @Summary Welcome

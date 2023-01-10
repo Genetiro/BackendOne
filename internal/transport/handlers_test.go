@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func CreateTest(t *testing.T) {
+func TestCreate(t *testing.T) {
 	lr := LinkResources{}
 
 	server := httptest.NewServer(lr.Routes())
@@ -19,15 +19,14 @@ func CreateTest(t *testing.T) {
 
 }
 
-func ListTest(t *testing.T) {
+func TestList(t *testing.T) {
 	lr := LinkResources{}
 
 	server := httptest.NewServer(lr.Routes())
 	defer server.Close()
 
-	w := httptest.NewRecorder()
-
 	req := httptest.NewRequest(http.MethodGet, "/links", nil)
+	w := httptest.NewRecorder()
 
 	lr.List(w, req)
 

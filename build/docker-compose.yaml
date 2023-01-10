@@ -4,7 +4,7 @@ services:
   myservice:
     container_name: shortner
     build:
-      context: ..
+      context: ../
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -18,7 +18,7 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - ./database/links.db:/root/db/
+      - ../internal/database/:/links.db
     networks:
       - myservice-net
     restart: always
