@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	_ "github.com/Genetiro/BackendOne/docs"
+	"github.com/Genetiro/BackendOne/internal/database"
 	"github.com/Genetiro/BackendOne/internal/server"
 	"github.com/Genetiro/BackendOne/internal/transport"
 	"github.com/go-chi/chi/middleware"
@@ -42,7 +43,15 @@ func main() {
 	})
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
-	r.Mount("/links", transport.LinkResources{}.Routes())
+	linksRepo, err := database.NewDB("../internal/database/links.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer linksRepo.CloseDb()
+
+	lr := transport.LinkResources{Repo: linksRepo}
+
+	r.Mount("/links", lr.Routes())
 	osSigChan := make(chan os.Signal, 1)
 	signal.Notify(osSigChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 

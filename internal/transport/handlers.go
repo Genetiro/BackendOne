@@ -8,9 +8,12 @@ import (
 	"github.com/Genetiro/BackendOne/internal/database"
 	"github.com/Genetiro/BackendOne/internal/shortner"
 	"github.com/go-chi/chi"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-type LinkResources struct{}
+type LinkResources struct {
+	Repo *database.Db
+}
 
 func (rs LinkResources) Routes() chi.Router {
 	r := chi.NewRouter()
@@ -33,11 +36,11 @@ func (rs LinkResources) Routes() chi.Router {
 // @Failure		500	{string}	string	"ok"
 // @Router /links [get]
 func (rs LinkResources) List(w http.ResponseWriter, r *http.Request) {
-	base, err := database.NewDB("./links.db")
+
+	list, err := rs.Repo.GetShortLinks()
 	if err != nil {
-		log.Println("can't connect for get list ", err)
+		log.Println("can't get links ", err)
 	}
-	list, _ := base.GetShortLinks()
 	tmpl, _ := template.ParseFiles("../html/list.html")
 	tmpl.Execute(w, list)
 
@@ -57,23 +60,20 @@ func (rs LinkResources) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("can't parse template")
 	}
-	if !shortner.IsValidUrl(r.FormValue("s")) {
+	if !shortner.IsValidUrl(r.FormValue("src_url")) {
 		log.Println("No valid url")
 
 	} else {
-		NewLink.Link = r.FormValue("s")
+		NewLink.Link = r.FormValue("src_url")
 		NewLink.Short = shortner.Shorting()
+		rs.Repo.CreateShort(NewLink)
 
+		// newBdRow, err := rs.Repo.CreateShort(NewLink)
+		// if err != nil {
+		// 	log.Fatal(err)
 	}
-	base, err := database.NewDB("./links.db")
-	if err != nil {
-		log.Println("can't connect for get list ", err)
-	}
-	newBdRow, err := base.CreateShort(NewLink)
-	if err != nil {
-		log.Fatal(err)
-	}
-	tmpl.Execute(w, newBdRow)
+
+	tmpl.Execute(w, NewLink)
 }
 
 // func PostCtx(next http.Handler) http.Handler {
@@ -94,12 +94,9 @@ func (rs LinkResources) Create(w http.ResponseWriter, r *http.Request) {
 func (rs LinkResources) Get(w http.ResponseWriter, r *http.Request) {
 	//shrt := r.Context().Value("short").(string)
 	shrt := chi.URLParam(r, "short")
-	base, err := database.NewDB("./links.db")
+
+	l, err := rs.Repo.GetByShort(shrt)
 	if err != nil {
-		log.Println("can't connect for get list ", err)
-	}
-	l, errr := base.GetByShort(shrt)
-	if errr != nil {
 		log.Println("have not short link ", err)
 	}
 
@@ -118,13 +115,10 @@ func (rs LinkResources) Get(w http.ResponseWriter, r *http.Request) {
 func (rs LinkResources) Delete(w http.ResponseWriter, r *http.Request) {
 	//shrt := r.Context().Value("short").(string)
 	shrt := chi.URLParam(r, "short")
-	base, err := database.NewDB("./links.db")
+
+	err := rs.Repo.DeleteShort(shrt)
 	if err != nil {
-		log.Println("can't connect for get list ", err)
-	}
-	errr := base.DeleteShort(shrt)
-	if errr != nil {
-		log.Println("can't delete", errr)
+		log.Println("can't delete", err)
 	}
 	http.Redirect(w, r, "/", 301)
 }

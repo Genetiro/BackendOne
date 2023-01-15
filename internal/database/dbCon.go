@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Db struct {
@@ -20,14 +20,9 @@ type ListDb struct {
 
 var ErrDuplicate = errors.New("record already exists")
 
-func DbCon() error {
-	db, err := sql.Open("sqlite3", "./links.db")
-	if err != nil {
-		log.Println("can't open db", err)
-	}
+func (dbase *Db) CloseDb() error {
+	return dbase.db.Close()
 
-	defer db.Close()
-	return nil
 }
 
 func NewDB(dbFile string) (*Db, error) {
@@ -42,7 +37,7 @@ func NewDB(dbFile string) (*Db, error) {
 }
 
 func (dbase *Db) GetShortLinks() ([]ListDb, error) {
-	rows, err := dbase.db.Query("SELECT * FROM links")
+	rows, err := dbase.db.Query("SELECT * FROM linkshort")
 	if err != nil {
 		log.Println(err)
 	}
@@ -61,7 +56,7 @@ func (dbase *Db) GetShortLinks() ([]ListDb, error) {
 }
 
 func (dbase *Db) DeleteShort(shrt string) error {
-	_, err := dbase.db.Exec("DELETe FROM links.linkshort WHERE short = $1", shrt)
+	_, err := dbase.db.Exec("DELETe FROM linkshort WHERE short = $1", shrt)
 	if err != nil {
 		log.Println(err)
 	}
@@ -69,7 +64,7 @@ func (dbase *Db) DeleteShort(shrt string) error {
 }
 
 func (dbase *Db) GetByShort(shrt string) (*ListDb, error) {
-	row := dbase.db.QueryRow("SELECT Id, Link, Short FROM links.linkshort WHERE short = $1", shrt)
+	row := dbase.db.QueryRow("SELECT Id, Link, Short FROM linkshort WHERE short = $1", shrt)
 
 	l := ListDb{}
 	err := row.Scan(&l.Id, &l.Link, &l.Short)
@@ -83,12 +78,12 @@ func (dbase *Db) CreateShort(shrt ListDb) (*ListDb, error) {
 
 	res, err := dbase.db.Exec("INSERT INTO linkshort (Link, Short) values ($1, $2)", shrt.Link, shrt.Short)
 	if err != nil {
-		var sqliteErr sqlite3.Error
-		if errors.As(err, &sqliteErr) {
-			if errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) {
-				return nil, ErrDuplicate
-			}
-		}
+		// var sqliteErr sqlite3.Error
+		// if errors.As(err, &sqliteErr) {
+		// 	if errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) {
+		// 		return nil, ErrDuplicate
+		// 	}
+		// }
 		return nil, err
 	}
 	id, err := res.LastInsertId()
@@ -97,4 +92,5 @@ func (dbase *Db) CreateShort(shrt ListDb) (*ListDb, error) {
 	}
 	shrt.Id = id
 	return &shrt, nil
+
 }
