@@ -1,0 +1,114 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: API server for links
+  title: Shortner API
+  version: "1.0"
+paths:
+  /links:
+    get:
+      description: get table of links
+      responses:
+        "200":
+          description: list
+          schema:
+            items:
+              type: array
+            type: array
+        "400":
+          description: ok
+          schema:
+            type: string
+        "404":
+          description: ok
+          schema:
+            type: string
+        "500":
+          description: ok
+          schema:
+            type: string
+      summary: List
+    post:
+      description: create new short links
+      parameters:
+      - description: new link
+        in: body
+        name: result.Link
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: list
+          schema:
+            type: struct
+        "400":
+          description: ok
+          schema:
+            type: string
+        "404":
+          description: ok
+          schema:
+            type: string
+        "500":
+          description: ok
+          schema:
+            type: string
+      summary: Create
+  /links/{short}:
+    delete:
+      description: delete line from table filtered by short
+      parameters:
+      - description: delete link
+        in: path
+        name: short
+        required: true
+        type: string
+      responses:
+        "301":
+          description: Moved Permanently
+          schema:
+            type: integer
+        "400":
+          description: ok
+          schema:
+            type: string
+        "404":
+          description: ok
+          schema:
+            type: string
+        "500":
+          description: ok
+          schema:
+            type: string
+      summary: Delete
+    get:
+      description: get link filtered by short
+      parameters:
+      - description: get link
+        in: path
+        name: short
+        required: true
+        type: string
+      responses:
+        "200":
+          description: link
+          schema:
+            items:
+              type: array
+            type: array
+        "400":
+          description: ok
+          schema:
+            type: string
+        "404":
+          description: ok
+          schema:
+            type: string
+        "500":
+          description: ok
+          schema:
+            type: string
+      summary: Get
+swagger: "2.0"
