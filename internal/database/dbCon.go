@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -26,7 +27,10 @@ func (dbase *Db) CloseDb() error {
 }
 
 func NewDB(dbFile string) (*Db, error) {
-	sqlDB, err := sql.Open("sqlite3", dbFile)
+	//_, caller, _, _ := runtime.Caller(0)
+	absPath := filepath.Join(filepath.Dir("C:/Users/"), dbFile)
+	fmt.Println(absPath)
+	sqlDB, err := sql.Open("sqlite3", absPath)
 	if err != nil {
 		return nil, err
 	}
@@ -45,11 +49,10 @@ func (dbase *Db) GetShortLinks() ([]ListDb, error) {
 	ListLinks := []ListDb{}
 	for rows.Next() {
 		l := ListDb{}
-		err := rows.Scan(&l.Id, &l.Link, &l.Short)
-		if err != nil {
-			fmt.Println(err)
-			continue
+		if err := rows.Scan(&l.Id, &l.Link, &l.Short); err != nil {
+			return nil, err
 		}
+
 		ListLinks = append(ListLinks, l)
 	}
 	return ListLinks, nil

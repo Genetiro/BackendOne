@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -36,6 +37,7 @@ func (rs LinkResources) Routes() chi.Router {
 // @Failure		500	{string}	string	"ok"
 // @Router /links [get]
 func (rs LinkResources) List(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("List")
 
 	list, err := rs.Repo.GetShortLinks()
 	if err != nil {
@@ -93,6 +95,8 @@ func (rs LinkResources) Create(w http.ResponseWriter, r *http.Request) {
 // @Router /links/{short} [get]
 func (rs LinkResources) Get(w http.ResponseWriter, r *http.Request) {
 	//shrt := r.Context().Value("short").(string)
+	fmt.Println("List by short link")
+
 	shrt := chi.URLParam(r, "short")
 
 	l, err := rs.Repo.GetByShort(shrt)

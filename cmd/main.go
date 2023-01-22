@@ -43,7 +43,7 @@ func main() {
 	})
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
-	linksRepo, err := database.NewDB("../internal/database/links.db")
+	linksRepo, err := database.NewDB("links.db")
 	if err != nil {
 		log.Fatal(err)
 	}
