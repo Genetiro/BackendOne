@@ -8,7 +8,7 @@ import (
 
 	"github.com/Genetiro/BackendOne/internal/database"
 	"github.com/Genetiro/BackendOne/internal/shortner"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	_ "github.com/mattn/go-sqlite3"
 )
 
